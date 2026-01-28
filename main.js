@@ -111,6 +111,8 @@ function createWindow() {
   mainWindow.loadURL(`http://localhost:${PORT}/`);
 
   // Inject address bar
+  const DEFAULT_URI = 'https://timbl.solidcommunity.net/profile/card#me';
+
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.insertCSS(ADDRESS_BAR_CSS);
     mainWindow.webContents.executeJavaScript(`
@@ -119,7 +121,7 @@ function createWindow() {
         nav.id = 'solid-desktop-nav';
         nav.innerHTML = \`
           <label>Visiting</label>
-          <input type="text" id="solid-desktop-uri" placeholder="Enter a Solid URI..." value="\${window.location.href}" />
+          <input type="text" id="solid-desktop-uri" placeholder="Enter a Solid URI..." value="${DEFAULT_URI}" />
           <button id="solid-desktop-go">Go</button>
         \`;
         document.body.insertBefore(nav, document.body.firstChild);
@@ -134,6 +136,13 @@ function createWindow() {
         uriInput.addEventListener('keyup', (e) => {
           if (e.key === 'Enter') window.location.href = uriInput.value;
         });
+
+        // Auto-navigate to default URI on first load
+        if (window.location.href.endsWith(':${PORT}/') || window.location.href.endsWith(':${PORT}')) {
+          setTimeout(() => {
+            window.location.href = '${DEFAULT_URI}';
+          }, 500);
+        }
       }
     `);
   });
