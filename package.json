@@ -13,7 +13,7 @@
   },
   "keywords": ["solid", "desktop", "jss", "mashlib", "electron"],
   "author": "",
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "dependencies": {
     "electron": "^28.0.0",
     "javascript-solid-server": "file:../jss",
