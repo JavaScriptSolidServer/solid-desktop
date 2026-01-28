@@ -1,8 +1,11 @@
 {
   "name": "solid-desktop",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A minimal Solid desktop app - JSS + mashlib in Electron",
   "main": "main.js",
+  "bin": {
+    "solid-desktop": "./bin/solid-desktop.js"
+  },
   "type": "module",
   "scripts": {
     "start": "electron ."

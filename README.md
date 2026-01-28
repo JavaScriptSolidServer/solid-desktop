@@ -2,15 +2,25 @@
 
 A minimal Solid desktop app - JSS + mashlib in Electron.
 
-## Install
+## Quick Start
 
 ```bash
-npm install
+npx solid-desktop
 ```
 
-## Run
+## Install Globally
 
 ```bash
+npm install -g solid-desktop
+solid-desktop
+```
+
+## Development
+
+```bash
+git clone https://github.com/JavaScriptSolidServer/solid-desktop.git
+cd solid-desktop
+npm install
 npm start
 ```
 
@@ -29,4 +39,4 @@ Edit `config.json`:
 
 ## License
 
-MIT
+AGPL-3.0
