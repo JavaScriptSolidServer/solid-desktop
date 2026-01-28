@@ -1,0 +1,22 @@
+{
+  "name": "solid-desktop",
+  "version": "0.0.1",
+  "description": "A minimal Solid desktop app - JSS + mashlib in Electron",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JavaScriptSolidServer/solid-desktop.git"
+  },
+  "keywords": ["solid", "desktop", "jss", "mashlib", "electron"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^28.0.0",
+    "javascript-solid-server": "file:../jss",
+    "mashlib-jss": "file:../mashlib-jss"
+  }
+}
