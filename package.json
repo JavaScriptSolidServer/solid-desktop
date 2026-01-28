@@ -1,6 +1,6 @@
 {
   "name": "solid-desktop",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A minimal Solid desktop app - JSS + mashlib in Electron",
   "main": "main.js",
   "bin": {
@@ -19,7 +19,7 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "electron": "^28.0.0",
-    "javascript-solid-server": "file:../jss",
-    "mashlib-jss": "file:../mashlib-jss"
+    "javascript-solid-server": "^0.0.81",
+    "mashlib-jss": "^0.1.1"
   }
 }
