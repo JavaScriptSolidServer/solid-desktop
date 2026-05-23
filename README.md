@@ -1,6 +1,8 @@
 # Solid Desktop
 
-A minimal Solid desktop app - JSS + mashlib in Electron.
+A thin Electron shell over [jspod](https://jspod.org) — your own Solid pod running locally, in a desktop window with a URI bar for visiting other people's pods.
+
+On first start, jspod's bootstrap installs the `default` app bundle (home, app store, plaza, vellum, plume, charlie, file explorer, …) into your local pod and seeds the welcome / signin / account pages. Sign in with `me / me` (localhost only).
 
 ## Quick Start
 
@@ -36,6 +38,8 @@ Edit `config.json`:
   "root": "./data"
 }
 ```
+
+`root` is passed to jspod as `--root`. The first start populates it; subsequent starts are no-ops on the seed data.
 
 ## License
 

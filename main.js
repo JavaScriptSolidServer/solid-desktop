@@ -1,12 +1,13 @@
 import { app, BrowserWindow, Menu } from 'electron';
-import { createServer } from 'javascript-solid-server/src/server.js';
+import { spawn } from 'child_process';
 import { readFileSync } from 'fs';
-import { join, dirname } from 'path';
+import { dirname, join, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { createRequire } from 'module';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
-// Address bar CSS - inspired by solid-docs browser
 const ADDRESS_BAR_CSS = `
 #solid-desktop-nav {
   display: flex;
@@ -58,28 +59,62 @@ const ADDRESS_BAR_CSS = `
 }
 `;
 
-// Load config
-let config = { port: 3011, width: 1200, height: 800 };
+let config = { port: 3011, width: 1200, height: 800, root: './data' };
 try {
-  config = JSON.parse(readFileSync(join(__dirname, 'config.json'), 'utf8'));
-} catch (e) {
+  config = { ...config, ...JSON.parse(readFileSync(join(__dirname, 'config.json'), 'utf8')) };
+} catch {
   console.log('Using default config');
 }
 
-const PORT = config.port || 3000;
+const PORT = config.port;
+const ROOT = resolve(__dirname, config.root);
+const POD_URL = `http://localhost:${PORT}/`;
+
 let mainWindow;
-let server;
+let jspodProc;
 
-async function startJSS() {
-  server = createServer({
-    mashlib: true,
-    mashlibCdn: false,
-    root: config.root || join(__dirname, 'data'),
-    logger: false
+// Resolve the jspod CLI script from the installed package so we don't
+// depend on PATH or .bin symlinks (which can be wrong inside an Electron
+// app bundle). jspod's package.json sets `main: index.js`, so resolving
+// the package entry gives us the script to hand to node.
+function resolveJspodScript() {
+  return require.resolve('jspod');
+}
+
+async function waitForReady(url, timeoutMs = 30000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try {
+      const ac = new AbortController();
+      const t = setTimeout(() => ac.abort(), 1000);
+      await fetch(url, { signal: ac.signal, redirect: 'manual' });
+      clearTimeout(t);
+      return true;
+    } catch {
+      await new Promise((r) => setTimeout(r, 250));
+    }
+  }
+  return false;
+}
+
+function startJspod() {
+  // Electron sets ELECTRON_RUN_AS_NODE=1 so process.execPath behaves as
+  // plain node when invoked with this env. Without it, spawning execPath
+  // would launch another full Electron app.
+  jspodProc = spawn(
+    process.execPath,
+    [resolveJspodScript(), '--no-open', '--port', String(PORT), '--root', ROOT],
+    {
+      stdio: 'inherit',
+      env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' }
+    }
+  );
+
+  jspodProc.on('exit', (code) => {
+    if (code !== 0 && code !== null) {
+      console.error(`jspod exited with code ${code}`);
+    }
   });
-
-  await server.listen({ port: PORT, host: 'localhost' });
-  console.log(`JSS running at http://localhost:${PORT}`);
 }
 
 function createWindow() {
@@ -92,12 +127,11 @@ function createWindow() {
     }
   });
 
-  // Simple menu
   const menu = Menu.buildFromTemplate([
     {
       label: 'Solid Desktop',
       submenu: [
-        { label: 'Home', click: () => mainWindow.loadURL(`http://localhost:${PORT}/`) },
+        { label: 'Home', click: () => mainWindow.loadURL(POD_URL) },
         { type: 'separator' },
         { label: 'Reload', accelerator: 'CmdOrCtrl+R', click: () => mainWindow.reload() },
         { label: 'DevTools', accelerator: 'F12', click: () => mainWindow.webContents.toggleDevTools() },
@@ -108,10 +142,7 @@ function createWindow() {
   ]);
   Menu.setApplicationMenu(menu);
 
-  mainWindow.loadURL(`http://localhost:${PORT}/`);
-
-  // Inject address bar
-  const DEFAULT_URI = 'https://timbl.solidcommunity.net/profile/card#me';
+  mainWindow.loadURL(POD_URL);
 
   mainWindow.webContents.on('did-finish-load', () => {
     mainWindow.webContents.insertCSS(ADDRESS_BAR_CSS);
@@ -121,7 +152,7 @@ function createWindow() {
         nav.id = 'solid-desktop-nav';
         nav.innerHTML = \`
           <label>Visiting</label>
-          <input type="text" id="solid-desktop-uri" placeholder="Enter a Solid URI..." value="${DEFAULT_URI}" />
+          <input type="text" id="solid-desktop-uri" placeholder="Enter a Solid URI..." value="\${window.location.href}" />
           <button id="solid-desktop-go">Go</button>
         \`;
         document.body.insertBefore(nav, document.body.firstChild);
@@ -136,13 +167,6 @@ function createWindow() {
         uriInput.addEventListener('keyup', (e) => {
           if (e.key === 'Enter') window.location.href = uriInput.value;
         });
-
-        // Auto-navigate to default URI on first load
-        if (window.location.href.endsWith(':${PORT}/') || window.location.href.endsWith(':${PORT}')) {
-          setTimeout(() => {
-            window.location.href = '${DEFAULT_URI}';
-          }, 500);
-        }
       }
     `);
   });
@@ -151,7 +175,11 @@ function createWindow() {
 }
 
 app.whenReady().then(async () => {
-  await startJSS();
+  startJspod();
+  const ok = await waitForReady(POD_URL);
+  if (!ok) {
+    console.error(`jspod did not become ready at ${POD_URL} within 30s`);
+  }
   createWindow();
 });
 
@@ -163,6 +191,8 @@ app.on('activate', () => {
   if (mainWindow === null) createWindow();
 });
 
-app.on('before-quit', async () => {
-  if (server) await server.close();
+app.on('before-quit', () => {
+  if (jspodProc && !jspodProc.killed) {
+    jspodProc.kill('SIGTERM');
+  }
 });
