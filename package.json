@@ -1,7 +1,7 @@
 {
   "name": "solid-desktop",
   "version": "0.0.5",
-  "description": "A minimal Solid desktop app - JSS + mashlib in Electron",
+  "description": "A minimal Solid desktop app - a thin Electron shell over jspod",
   "main": "main.js",
   "bin": {
     "solid-desktop": "./bin/solid-desktop.js"
@@ -14,12 +14,11 @@
     "type": "git",
     "url": "git+https://github.com/JavaScriptSolidServer/solid-desktop.git"
   },
-  "keywords": ["solid", "desktop", "jss", "mashlib", "electron"],
+  "keywords": ["solid", "desktop", "jspod", "jss", "electron"],
   "author": "",
   "license": "AGPL-3.0",
   "dependencies": {
     "electron": "^28.0.0",
-    "javascript-solid-server": "^0.0.81",
-    "mashlib-jss": "^0.1.1"
+    "jspod": "^0.0.42"
   }
 }
