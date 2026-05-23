@@ -8,8 +8,30 @@ import { createRequire } from 'module';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
+// Nav-bar height is referenced twice (in the nav rule itself and as the
+// body offset below) — keep them in sync by deriving the latter from
+// the former. Bumping this changes both.
+const NAV_HEIGHT_PX = 64;
+
 const ADDRESS_BAR_CSS = `
+/* Push the page's content down by the nav's height so a position:fixed
+   nav doesn't sit on top of the first paragraph. Targets html instead
+   of body because pages like jspod's welcome.html set body{margin:2em
+   auto} — body padding would just expand the centered box's bottom
+   without moving content past the nav. Padding on html (the initial
+   containing block) shifts everything reliably. */
+html { padding-top: ${NAV_HEIGHT_PX}px !important; box-sizing: border-box; }
+
 #solid-desktop-nav {
+  /* Fixed + full-viewport-width so the nav escapes any narrow body
+     (e.g. jspod welcome's max-width:680px centered body) and always
+     spans the window edge-to-edge. */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2147483647;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 12px;
